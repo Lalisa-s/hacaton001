@@ -1,0 +1,753 @@
+{
+  "$defs": {
+    "AccountRead": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "user_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "User Id",
+          "type": "integer"
+        },
+        "balance": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Balance",
+          "type": "integer"
+        },
+        "pigs": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Pigs",
+          "type": "array"
+        },
+        "active_balance": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Active Balance",
+          "type": "integer"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "transactions_history": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Transactions History",
+          "type": "array"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Limit"
+        },
+        "limit_period": {
+          "anyOf": [
+            {
+              "enum": [
+                "daily",
+                "weekly",
+                "monthly"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Limit Period"
+        }
+      },
+      "required": [
+        "id",
+        "user_id",
+        "balance",
+        "pigs",
+        "active_balance",
+        "active",
+        "transactions_history",
+        "limit",
+        "limit_period"
+      ],
+      "title": "AccountRead",
+      "type": "object"
+    },
+    "AgreeParent": {
+      "additionalProperties": false,
+      "properties": {
+        "pig": {
+          "title": "Pig",
+          "type": "boolean"
+        },
+        "history": {
+          "title": "History",
+          "type": "boolean"
+        },
+        "transaction": {
+          "title": "Transaction",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "pig",
+        "history",
+        "transaction"
+      ],
+      "title": "AgreeParent",
+      "type": "object"
+    },
+    "AutoTransactionRead": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "format": "date-time",
+          "title": "Data",
+          "type": "string"
+        },
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "recipient_accoun_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Recipient Accoun Id",
+          "type": "integer"
+        },
+        "source_account_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Source Account Id",
+          "type": "integer"
+        },
+        "summ": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Summ",
+          "type": "integer"
+        },
+        "period": {
+          "enum": [
+            "daily",
+            "weekly",
+            "monthly"
+          ],
+          "title": "Period",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "id",
+        "recipient_accoun_id",
+        "source_account_id",
+        "summ",
+        "period"
+      ],
+      "title": "AutoTransactionRead",
+      "type": "object"
+    },
+    "ChaildProfileRead": {
+      "additionalProperties": false,
+      "properties": {
+        "user_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "User Id",
+          "type": "integer"
+        },
+        "parent_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Parent Id",
+          "type": "integer"
+        },
+        "age_group": {
+          "enum": [
+            "children",
+            "teanagers"
+          ],
+          "title": "Age Group",
+          "type": "string"
+        },
+        "agree_parent": {
+          "$ref": "#/$defs/AgreeParent"
+        },
+        "tamagochi": {
+          "$ref": "#/$defs/Tamagochi"
+        },
+        "MTcount": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Mtcount",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "user_id",
+        "parent_id",
+        "age_group",
+        "agree_parent",
+        "tamagochi",
+        "MTcount"
+      ],
+      "title": "ChaildProfileRead",
+      "type": "object"
+    },
+    "EcoFamilyRead": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "users_id": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Users Id",
+          "type": "array"
+        },
+        "user_admin_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "User Admin Id",
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "accounts": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Accounts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "users_id",
+        "user_admin_id",
+        "name",
+        "accounts"
+      ],
+      "title": "EcoFamilyRead",
+      "type": "object"
+    },
+    "NewsRead": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "lavel": {
+          "enum": [
+            "children",
+            "teanagers",
+            "adult"
+          ],
+          "title": "Lavel",
+          "type": "string"
+        },
+        "test_id": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Test Id"
+        },
+        "test": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TestRead"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "lavel",
+        "test_id",
+        "test",
+        "text"
+      ],
+      "title": "NewsRead",
+      "type": "object"
+    },
+    "ParentTaskRead": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "format": "date-time",
+          "title": "Data",
+          "type": "string"
+        },
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "parent_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Parent Id",
+          "type": "integer"
+        },
+        "chaild_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Chaild Id",
+          "type": "integer"
+        },
+        "sum": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Sum",
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "id",
+        "parent_id",
+        "chaild_id",
+        "sum",
+        "name",
+        "text"
+      ],
+      "title": "ParentTaskRead",
+      "type": "object"
+    },
+    "PigRead": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "account_id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Account Id",
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "current_balance": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Current Balance",
+          "type": "integer"
+        },
+        "goal_balance": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Goal Balance",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "account_id",
+        "name",
+        "current_balance",
+        "goal_balance"
+      ],
+      "title": "PigRead",
+      "type": "object"
+    },
+    "Tamagochi": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "eat": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Eat",
+          "type": "integer"
+        },
+        "room": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Room",
+          "type": "integer"
+        },
+        "cloth": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Cloth",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "eat",
+        "room",
+        "cloth"
+      ],
+      "title": "Tamagochi",
+      "type": "object"
+    },
+    "TestRead": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "modul": {
+          "minLength": 1,
+          "title": "Modul",
+          "type": "string"
+        },
+        "level": {
+          "enum": [
+            "children",
+            "teanagers",
+            "adult"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "questions": {
+          "patternProperties": {
+            "^[1-9][0-9]*$": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "title": "Questions",
+          "type": "object"
+        },
+        "answers": {
+          "patternProperties": {
+            "^[1-9][0-9]*$": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "title": "Answers",
+          "type": "object"
+        },
+        "reward_MT": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Reward Mt",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "modul",
+        "level",
+        "questions",
+        "answers",
+        "reward_MT"
+      ],
+      "title": "TestRead",
+      "type": "object"
+    },
+    "TransactionRead": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "format": "date-time",
+          "title": "Data",
+          "type": "string"
+        },
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "cender": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Cender",
+          "type": "integer"
+        },
+        "recipient": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Recipient",
+          "type": "integer"
+        },
+        "amount": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Amount",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "data",
+        "id",
+        "cender",
+        "recipient",
+        "amount"
+      ],
+      "title": "TransactionRead",
+      "type": "object"
+    },
+    "UserRead": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "title": "Id",
+          "type": "integer"
+        },
+        "login": {
+          "minLength": 1,
+          "title": "Login",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "parent",
+            "child"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "accounts": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Accounts",
+          "type": "array"
+        },
+        "ECOfamily_id": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ecofamily Id"
+        },
+        "newses_id": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Newses Id",
+          "type": "array"
+        },
+        "test_id": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Test Id",
+          "type": "array"
+        },
+        "auto_transaction": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "title": "Auto Transaction",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "login",
+        "role",
+        "accounts",
+        "ECOfamily_id",
+        "newses_id",
+        "test_id",
+        "auto_transaction"
+      ],
+      "title": "UserRead",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A local example file; this is not an implemented bootstrap endpoint.",
+  "properties": {
+    "User": {
+      "items": {
+        "$ref": "#/$defs/UserRead"
+      },
+      "title": "User",
+      "type": "array"
+    },
+    "ChaildProfile": {
+      "items": {
+        "$ref": "#/$defs/ChaildProfileRead"
+      },
+      "title": "Chaildprofile",
+      "type": "array"
+    },
+    "Test": {
+      "items": {
+        "$ref": "#/$defs/TestRead"
+      },
+      "title": "Test",
+      "type": "array"
+    },
+    "Pig": {
+      "items": {
+        "$ref": "#/$defs/PigRead"
+      },
+      "title": "Pig",
+      "type": "array"
+    },
+    "Account": {
+      "items": {
+        "$ref": "#/$defs/AccountRead"
+      },
+      "title": "Account",
+      "type": "array"
+    },
+    "Transaction": {
+      "items": {
+        "$ref": "#/$defs/TransactionRead"
+      },
+      "title": "Transaction",
+      "type": "array"
+    },
+    "EcoFamily": {
+      "items": {
+        "$ref": "#/$defs/EcoFamilyRead"
+      },
+      "title": "Ecofamily",
+      "type": "array"
+    },
+    "News": {
+      "items": {
+        "$ref": "#/$defs/NewsRead"
+      },
+      "title": "News",
+      "type": "array"
+    },
+    "Parent_Task": {
+      "items": {
+        "$ref": "#/$defs/ParentTaskRead"
+      },
+      "title": "Parent Task",
+      "type": "array"
+    },
+    "AutoTransaction": {
+      "items": {
+        "$ref": "#/$defs/AutoTransactionRead"
+      },
+      "title": "Autotransaction",
+      "type": "array"
+    }
+  },
+  "required": [
+    "User",
+    "ChaildProfile",
+    "Test",
+    "Pig",
+    "Account",
+    "Transaction",
+    "EcoFamily",
+    "News",
+    "Parent_Task",
+    "AutoTransaction"
+  ],
+  "title": "ExchangeFixtures",
+  "type": "object"
+}

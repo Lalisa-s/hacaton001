@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "INSUFFICIENT_FUNDS",
+    "message": "Недостаточно доступных средств",
+    "details": []
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "User": [
+    {
+      "id": 10,
+      "login": "demo_parent",
+      "role": "parent",
+      "accounts": [
+        100,
+        101
+      ],
+      "ECOfamily_id": 1,
+      "newses_id": [],
+      "test_id": [],
+      "auto_transaction": [
+        20
+      ]
+    },
+    {
+      "id": 11,
+      "login": "demo_child",
+      "role": "child",
+      "accounts": [],
+      "ECOfamily_id": 1,
+      "newses_id": [
+        5
+      ],
+      "test_id": [],
+      "auto_transaction": []
+    }
+  ],
+  "ChaildProfile": [
+    {
+      "user_id": 11,
+      "parent_id": 10,
+      "age_group": "children",
+      "agree_parent": {
+        "pig": true,
+        "history": true,
+        "transaction": false
+      },
+      "tamagochi": {
+        "name": "Банан",
+        "eat": 80,
+        "room": 1,
+        "cloth": 2
+      },
+      "MTcount": 50
+    }
+  ],
+  "Test": [
+    {
+      "id": 8,
+      "name": "Зачем нужна копилка",
+      "modul": "Накопления",
+      "level": "children",
+      "questions": {
+        "1": "Что происходит при пополнении своей копилки?"
+      },
+      "answers": {
+        "1": [
+          "Деньги резервируются",
+          "Появляются новые деньги",
+          "BYN превращаются в MT"
+        ]
+      },
+      "reward_MT": 10
+    }
+  ],
+  "Pig": [
+    {
+      "id": 500,
+      "account_id": 101,
+      "name": "Велосипед",
+      "current_balance": 3000,
+      "goal_balance": 30000
+    }
+  ],
+  "Account": [
+    {
+      "id": 100,
+      "user_id": 10,
+      "balance": 20000,
+      "pigs": [],
+      "active_balance": 20000,
+      "active": true,
+      "transactions_history": [
+        900
+      ],
+      "limit": 15000,
+      "limit_period": "daily"
+    },
+    {
+      "id": 101,
+      "user_id": 10,
+      "balance": 10000,
+      "pigs": [
+        500
+      ],
+      "active_balance": 7000,
+      "active": true,
+      "transactions_history": [
+        900
+      ],
+      "limit": 5000,
+      "limit_period": "daily"
+    }
+  ],
+  "Transaction": [
+    {
+      "data": "2026-10-20T10:30:00Z",
+      "id": 900,
+      "cender": 100,
+      "recipient": 101,
+      "amount": 2500
+    }
+  ],
+  "EcoFamily": [
+    {
+      "id": 1,
+      "users_id": [
+        10,
+        11
+      ],
+      "user_admin_id": 10,
+      "name": "Демо-семья",
+      "accounts": [
+        100,
+        101
+      ]
+    }
+  ],
+  "News": [
+    {
+      "id": 5,
+      "name": "Планируем накопления",
+      "lavel": "children",
+      "test_id": 8,
+      "test": {
+        "id": 8,
+        "name": "Зачем нужна копилка",
+        "modul": "Накопления",
+        "level": "children",
+        "questions": {
+          "1": "Что происходит при пополнении своей копилки?"
+        },
+        "answers": {
+          "1": [
+            "Деньги резервируются",
+            "Появляются новые деньги",
+            "BYN превращаются в MT"
+          ]
+        },
+        "reward_MT": 10
+      },
+      "text": "Копилка помогает отложить часть денег на выбранную цель."
+    }
+  ],
+  "Parent_Task": [
+    {
+      "data": "2026-10-25T17:00:00Z",
+      "id": 30,
+      "parent_id": 10,
+      "chaild_id": 11,
+      "sum": 500,
+      "name": "Полить растения",
+      "text": "Полить растения в своей комнате."
+    }
+  ],
+  "AutoTransaction": [
+    {
+      "data": "2026-10-20T06:00:00Z",
+      "id": 20,
+      "recipient_accoun_id": 101,
+      "source_account_id": 100,
+      "summ": 1000,
+      "period": "weekly"
+    }
+  ]
+}

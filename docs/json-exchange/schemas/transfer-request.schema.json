@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "cender": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Cender",
+      "type": "integer"
+    },
+    "recipient": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Recipient",
+      "type": "integer"
+    },
+    "amount": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "title": "Amount",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "cender",
+    "recipient",
+    "amount"
+  ],
+  "title": "TransferCreate",
+  "type": "object"
+}

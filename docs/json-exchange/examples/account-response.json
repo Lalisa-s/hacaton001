@@ -1,0 +1,15 @@
+{
+  "id": 101,
+  "user_id": 10,
+  "balance": 10000,
+  "pigs": [
+    500
+  ],
+  "active_balance": 7000,
+  "active": true,
+  "transactions_history": [
+    900
+  ],
+  "limit": 5000,
+  "limit_period": "daily"
+}
