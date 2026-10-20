@@ -180,11 +180,16 @@ hacaton001/
     │   │   ├── router.py
     │   │   └── endpoints/health.py
     │   ├── core/config.py      # настройки
-    │   └── db/session.py       # engine и сессия SQLAlchemy
+    │   ├── db/session.py       # engine и сессия SQLAlchemy
+    │   └── schemas/wire_models.py # проверка и сборка JSON
     ├── tests/
     │   ├── test_api.py
     │   ├── test_config.py
-    │   └── test_database.py
+    │   ├── test_database.py
+    │   └── test_json_schemas.py
+    ├── examples/
+    │   ├── json_exchange.py   # запускаемый пример JSON
+    │   └── build_json_examples.py # генератор общих JSON и JSON Schema
     ├── .venv/                  # локальное окружение, игнорируется Git
     ├── .env                    # локальные настройки, игнорируются Git
     ├── .env.example
@@ -210,3 +215,40 @@ git -C .. remote -v
 
 Окружение, `.env`, кэши и локальные базы исключены общим `.gitignore`.
 Коммиты, отправка изменений и слияния выполняются для общего репозитория.
+
+## Код обработки JSON
+
+Pydantic-схемы и функции `parse_transfer_json`, `public_projection`,
+`account_response` находятся в `app/schemas/wire_models.py`.
+Это проверка данных и сборка ответов; операции с деньгами выполняются будущими сервисами.
+
+Пример из терминала PyCharm с рабочей папкой `backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m examples.json_exchange
+.\.venv\Scripts\python.exe -m pytest tests/test_json_schemas.py -q
+```
+
+Пример читает файлы из `../docs/json-exchange/examples/`, проверяет запрос и
+собирает публичный JSON счёта. Он не записывает данные в БД.
+
+Можно указать свой файл запроса:
+
+```powershell
+.\.venv\Scripts\python.exe -m examples.json_exchange --request-file ..\docs\json-exchange\examples\transfer-request.json
+```
+
+После изменения схем обновите общие JSON-примеры и JSON Schema:
+
+```powershell
+.\.venv\Scripts\python.exe -m examples.build_json_examples
+```
+
+Генератор использует `app/schemas/wire_models.py` и записывает общие материалы
+в `../docs/json-exchange/examples/` и `../docs/json-exchange/schemas/`.
+
+В коде backend импортируйте схемы так:
+
+```python
+from app.schemas.wire_models import AccountRead, TransferCreate, parse_transfer_json
+```

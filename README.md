@@ -5,14 +5,16 @@
 ```text
 hacaton001/
 ├── backend/       # FastAPI, SQLAlchemy, SQLite, тесты
-├── frontend/      # место для классического uni-app / Vue 3
+├── frontend/      # модули uni-app для обмена JSON и проверки
+├── docs/          # общий контракт, примеры JSON и JSON Schema
 ├── .gitignore
 └── README.md
 ```
 
-В `backend/` размещён подготовленный Python-проект. В `frontend/` пока только
-`.gitkeep`, чтобы папка сохранялась в Git. Frontend-разработчик добавляет свой
-проект в эту папку на своём компьютере.
+В `backend/` размещён Python-проект, схемы JSON, примеры и тесты.
+В `frontend/src/api/` находятся готовые клиентские модули, в `frontend/tests/` —
+проверки JSON. Frontend-разработчик подключает модули к своему приложению uni-app;
+Vue/uni-app приложение в этой папке пока не инициализировано.
 
 ## Запуск backend
 
@@ -59,3 +61,17 @@ IDE-настройки, `node_modules` и результаты сборки. Ф�
 
 Для соединения устройств по LAN требуется фактический адрес backend-компьютера
 и origin H5 frontend. Конкретные IP и порт frontend согласуются отдельно.
+
+## Обмен JSON с frontend
+
+Предлагаемый контракт и самостоятельные примеры Python/uni-app:
+[docs/api-contract.md](docs/api-contract.md).
+JSON передаётся в HTTP; файлы примеров используются для согласования и проверок.
+Сейчас реализован только health, остальные маршруты обозначены как проект.
+
+Из корня репозитория клиентские проверки запускаются без npm-зависимостей:
+
+```powershell
+node .\frontend\tests\test-api.mjs
+node .\frontend\tests\test-fixtures.mjs
+```
