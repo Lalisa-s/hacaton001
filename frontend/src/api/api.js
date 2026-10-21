@@ -8,6 +8,16 @@ const SAFE_MESSAGES = {
   LIMIT_EXCEEDED: 'Лимит операций превышен.',
   ACCESS_DENIED: 'Нет разрешения на эту операцию.',
   NOT_FOUND: 'Запрошенный объект не найден.',
+  DEMO_MODE_DISABLED: 'Демонстрационный режим backend выключен.',
+  DEMO_USER_NOT_FOUND: 'Демонстрационный профиль не найден.',
+  DATABASE_BUSY: 'Сервер занят. Обновите историю перед новым переводом.',
+  BALANCE_OVERFLOW: 'Сумма превышает допустимый остаток получателя.',
+  PIG_CLOSED: 'Копилка уже разбита. Пополнить её нельзя.',
+  REQUEST_RESOLVED: 'Запрос уже рассмотрен. Обновите данные.',
+  REQUEST_ALREADY_RESOLVED: 'Запрос уже рассмотрен. Обновите данные.',
+  INVALID_RESERVE: 'Не удалось проверить накопления. Обновите данные.',
+  FAMILY_NOT_FOUND: 'Профиль пока не подключён к экосемье.',
+  INVALID_PIG_ACCOUNT: 'Выберите счёт, связанный с этим ребёнком.',
 };
 
 export class ApiError extends Error {
@@ -139,13 +149,63 @@ export function createApi({ baseUrl, request }) {
       return send('GET', '/health');
     },
 
-    // ПРОЕКТ КОНТРАКТА: endpoint пока отсутствует в backend.
+    getMe() {
+      return send('GET', '/me');
+    },
+
+    getAccounts() {
+      return send('GET', '/accounts');
+    },
+
+    getFamilyMembers() { return send('GET', '/family/members'); },
+    getPigs() { return send('GET', '/pigs'); },
+    getPigRequests() { return send('GET', '/pig-break-requests'); },
+    createPig({ account_id, child_user_id, name, goal_balance }) {
+      requirePositiveInteger(account_id, 'account_id');
+      requirePositiveInteger(child_user_id, 'child_user_id');
+      requirePositiveInteger(goal_balance, 'goal_balance');
+      return send('POST', '/pigs', { account_id, child_user_id, name, goal_balance });
+    },
+    renamePig(id, name) {
+      requirePositiveInteger(id, 'id');
+      return send('PATCH', `/pigs/${id}`, { name });
+    },
+    contributePig(id, { account_id, amount }) {
+      requirePositiveInteger(id, 'id');
+      requirePositiveInteger(account_id, 'account_id');
+      requirePositiveInteger(amount, 'amount');
+      return send('POST', `/pigs/${id}/contributions`, { account_id, amount });
+    },
+    requestPigBreak(id) {
+      requirePositiveInteger(id, 'id');
+      return send('POST', `/pigs/${id}/break-requests`, {});
+    },
+    breakPig(id) {
+      requirePositiveInteger(id, 'id');
+      return send('POST', `/pigs/${id}/break`, {});
+    },
+    respondToPigRequest(id, decision) {
+      requirePositiveInteger(id, 'id');
+      if (!['approve', 'reject'].includes(decision)) throw new TypeError('Неверное решение.');
+      return send('POST', `/pig-break-requests/${id}/${decision}`, {});
+    },
+
+    getTransactions(accountId, { limit = 50, offset = 0 } = {}) {
+      requirePositiveInteger(accountId, 'accountId');
+      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100
+          || !Number.isSafeInteger(offset) || offset < 0) {
+        throw new TypeError('Некорректные параметры страницы истории.');
+      }
+      return send('GET', `/accounts/${accountId}/transactions?limit=${limit}&offset=${offset}`);
+    },
+
+    // Действующий demo endpoint; доступен при DEMO_MODE=true на backend.
     getAccount(id) {
       requirePositiveInteger(id, 'id');
       return send('GET', `/accounts/${id}`);
     },
 
-    // ПРОЕКТ КОНТРАКТА: endpoint пока отсутствует в backend.
+    // Действующий demo endpoint; сохраняет перевод между своими счетами.
     // cender/recipient — ID счетов; amount — целые копейки BYN.
     createTransaction({ cender, recipient, amount }) {
       requirePositiveInteger(cender, 'cender');

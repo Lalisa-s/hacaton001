@@ -1,0 +1,10 @@
+{
+  "name": "Family Banking Demo",
+  "appid": "",
+  "description": "Учебное семейное банковское приложение",
+  "versionName": "0.1.0",
+  "versionCode": "10",
+  "vueVersion": "3",
+  "h5": { "router": { "mode": "hash" } },
+  "uniStatistics": { "enable": false }
+}

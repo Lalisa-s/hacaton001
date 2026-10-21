@@ -1,0 +1,13 @@
+{
+  "pages": [{
+    "path": "pages/index/index",
+    "style": {
+      "navigationStyle": "custom",
+      "navigationBarTitleText": "Семейный банк"
+    }
+  }],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f4f6f3"
+  }
+}

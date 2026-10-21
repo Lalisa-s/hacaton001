@@ -16,7 +16,7 @@ export async function checkBackend(api) {
   return health.status === 'ok';
 }
 
-// Будущие вызовы: начнут работать после реализации соответствующих endpoint.
+// Демонстрационные вызовы: требуют DEMO_MODE=true на backend.
 export async function loadAccountExample(api, accountId) {
   const account = await api.getAccount(accountId);
   // account.balance хранит целые копейки. Форматируем без округления дробной суммы.

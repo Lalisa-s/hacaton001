@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     app_name: str = "Family Banking API"
     database_url: str = "sqlite:///./family_banking.db"
+    demo_mode: bool = False
+    demo_user_id: int = Field(default=10, gt=0, le=9_007_199_254_740_991)
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:5173",

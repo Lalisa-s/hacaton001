@@ -37,6 +37,19 @@ assert.deepEqual(await account.getAccount(3), { id: 3 });
 assert.equal(calls.at(-1).url, `${baseUrl}/accounts/3`);
 assert.throws(() => account.getAccount('3'), TypeError);
 
+await account.getMe();
+assert.equal(calls.at(-1).url, `${baseUrl}/me`);
+await account.getAccounts();
+assert.equal(calls.at(-1).url, `${baseUrl}/accounts`);
+await account.getTransactions(3);
+assert.equal(calls.at(-1).url, `${baseUrl}/accounts/3/transactions?limit=50&offset=0`);
+await account.getTransactions(3, { limit: 10, offset: 20 });
+assert.equal(calls.at(-1).url, `${baseUrl}/accounts/3/transactions?limit=10&offset=20`);
+assert.throws(() => account.getTransactions('3'), TypeError);
+for (const options of [{ limit: 0 }, { limit: 101 }, { offset: -1 }, { offset: 0.5 }]) {
+  assert.throws(() => account.getTransactions(3, options), TypeError);
+}
+
 const list = createApi({ baseUrl, request: reply(200, []) });
 assert.deepEqual(await list.getHealth(), []); // Common parser accepts object/array.
 for (const badBody of ['{"status":"ok"}', '<html>error</html>', null, 7, true, undefined]) {
