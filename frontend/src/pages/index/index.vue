@@ -1,70 +1,33 @@
 <template>
-  <view class="app-shell">
+  <view class="app-shell" :class="isChild ? 'child-theme' : 'adult-theme'">
     <view class="topbar" :inert="transferOpen ? true : undefined" :aria-hidden="transferOpen ? true : undefined">
       <view class="topbar-inner">
-        <view class="brand"><view class="brand-mark">сб</view><text>Семейный банк</text></view>
-        <view class="profile"><text class="demo-pill">ДЕМО</text><view class="avatar">{{ currentUser?.role === 'child' ? 'С' : 'Р' }}</view><text class="profile-label">{{ demoProfiles.find(p => p.id === demoUserId)?.label }}</text></view>
+        <view class="brand"><image class="brand-logo" :src="brandLogo" mode="aspectFit" aria-label="Логотип MOBY ОЧАГ" /><view><text class="brand-name">MOBY ОЧАГ</text><text class="brand-caption">{{ isChild ? 'Место, где растут мечты' : 'Финансы, которые объединяют' }}</text></view></view>
+        <view class="main-navigation" role="tablist" aria-label="Разделы приложения"><button v-for="tab in navigation" :key="tab.id" role="tab" :aria-selected="activeSection === tab.id" :class="['navigation-tab', { 'navigation-active': activeSection === tab.id }]" :disabled="navigationLocked" @click="openSection(tab.id)"><AppIcon :name="tab.icon" :size="19" :color="activeSection === tab.id ? '#ffce66' : '#949db8'" /><text>{{ tab.label }}</text></button></view>
+        <view class="profile-switcher"><text class="demo-label">ДЕМО</text><view class="profile-options"><button role="button" v-for="profile in demoProfiles" :key="profile.id" :class="{ 'profile-selected': demoUserId === profile.id }" :disabled="navigationLocked || refreshing || switching" @click="changeDemoProfile(profile.id)">{{ profile.label }}</button></view></view>
       </view>
-      <view class="demo-switch"><text>Демо-профиль:</text><button role="button" v-for="profile in demoProfiles" :key="profile.id" :class="{ 'demo-profile-active': demoUserId === profile.id }" :disabled="posting || pigLocked || transferUnknown || refreshing || switching" @click="changeDemoProfile(profile.id)">{{ profile.label }}</button></view>
     </view>
-
     <view class="page-content" :inert="transferOpen ? true : undefined" :aria-hidden="transferOpen ? true : undefined">
-      <view class="page-heading">
-        <view><text class="eyebrow">ВАШИ ФИНАНСЫ</text><text class="page-title">Всё важное — рядом</text><text class="page-description">Счета, накопления и переводы в одном месте.</text></view>
-        <view class="heading-actions">
-          <button v-if="currentUser?.role === 'parent'" ref="transferTrigger" role="button" tabindex="0" class="open-transfer-button" aria-haspopup="dialog" :aria-expanded="transferOpen" :disabled="initialLoading || accounts.length < 2 || pigLocked" @click="openTransfer" @keydown.enter.prevent="openTransfer" @keydown.space.prevent="openTransfer">Перевести деньги <text>↗</text></button>
-          <button role="button" class="refresh-button" :disabled="refreshing || posting" @click="refreshAll(false)"><text :class="{ spinning: refreshing }">↻</text><text>{{ refreshing ? 'Обновляем' : 'Обновить' }}</text></button>
-        </view>
-      </view>
-
-      <view v-if="loadError" class="notice notice-error" role="alert"><text class="notice-title">Не удалось обновить данные</text><text>{{ loadError }}</text><text v-if="accounts.length">Ниже показаны последние полученные остатки.</text></view>
-
-      <view v-if="initialLoading" class="loading-panel"><view class="loader" /><text>Загружаем ваши счета…</text></view>
-
-      <template v-else-if="accounts.length">
-        <view class="overview-grid">
-          <view class="balance-panel">
-            <view class="balance-panel-top"><text class="balance-label">Всего на счетах</text><text class="currency-label">BYN</text></view>
-            <text class="total-balance">{{ totals.balance }}</text>
-            <view class="balance-breakdown">
-              <view><view class="dot-label"><text class="dot dot-mint" /><text>Доступно для трат</text></view><text class="breakdown-value">{{ totals.available }} BYN</text></view>
-              <view><view class="dot-label"><text class="dot dot-lime" /><text>В копилках</text></view><text class="breakdown-value">{{ totals.reserved }} BYN</text></view>
-            </view>
-            <view class="balance-decoration decoration-one" /><view class="balance-decoration decoration-two" />
+      <FamilySection v-if="familyOpen" :key="demoUserId" :user="currentUser" :refresh-key="pigRefreshKey" @changed="refreshAll(false)" @locked="familyLocked = $event" />
+      <template v-else>
+        <view class="page-heading"><view><text class="eyebrow">{{ isChild ? 'ТВОЙ МАЛЕНЬКИЙ БОЛЬШОЙ МИР' : 'ЛИЧНЫЙ КАБИНЕТ' }}</text><text class="page-title">{{ pageTitle }}</text><text class="page-description">{{ pageDescription }}</text></view><view class="heading-actions"><button v-if="!isChild && dashboardTab === 'overview'" ref="transferTrigger" role="button" tabindex="0" class="open-transfer-button" aria-haspopup="dialog" :aria-expanded="transferOpen" :disabled="initialLoading || accounts.length < 2 || pigLocked" @click="openTransfer" @keydown.enter.prevent="openTransfer" @keydown.space.prevent="openTransfer"><AppIcon name="arrow" color="#ffffff" :size="18" /><text>Перевести деньги</text></button><button role="button" aria-label="Обновить данные" class="refresh-button" :disabled="refreshing || posting" @click="refreshAll(false)"><AppIcon name="refresh" :size="18" :class="{ spinning: refreshing }" /></button></view></view>
+        <view v-if="loadError" class="notice notice-error" role="alert"><text class="notice-title">Не удалось обновить данные</text><text>{{ loadError }}</text><text v-if="accounts.length">Показаны последние полученные остатки.</text></view>
+        <view v-if="initialLoading" class="loading-panel"><view class="loader" /><text>Собираем всё самое важное…</text></view>
+        <template v-else-if="accounts.length">
+          <view v-show="dashboardTab === 'overview'">
+            <view class="overview-grid"><view class="balance-panel"><view class="balance-panel-top"><text class="balance-label">{{ isChild ? 'Можно потратить' : 'Доступно на ваших счетах' }}</text><view class="balance-emblem"><AppIcon name="wallet" :size="22" color="#ccd3e5" /></view></view><view class="balance-number"><text class="total-balance">{{ totals.available }}</text><text class="currency-label">BYN</text></view><view class="balance-breakdown"><view><text class="breakdown-label">{{ isChild ? 'Ждут в копилках' : 'Зарезервировано в копилках' }}</text><text class="breakdown-value">{{ totals.reserved }} BYN</text></view><view><text class="breakdown-label">Всего с накоплениями</text><text class="breakdown-value">{{ totals.balance }} BYN</text></view></view><view class="balance-decoration" /></view>
+              <view class="intro-panel"><view class="dream-illustration"><view class="dream-orbit orbit-one" /><view class="dream-orbit orbit-two" /><view class="dream-coin"><AppIcon :name="isChild ? 'spark' : 'pig'" :size="46" color="#425179" /></view><text class="dream-star star-one">✦</text><text class="dream-star star-two">✧</text></view><text class="intro-title">{{ isChild ? 'У каждой мечты есть начало' : 'Большие планы начинаются с малого' }}</text><text class="intro-description">{{ isChild ? 'Придумай мечту, дай копилке имя и собирай на неё вместе с семьёй.' : 'Создавайте копилки для детей и помогайте всей семьёй приближать их цели.' }}</text><button role="button" class="intro-action" :disabled="navigationLocked" @click="openSection('pigs')"><text>{{ isChild ? 'К моим мечтам' : 'Открыть копилки' }}</text><AppIcon name="arrow" :size="17" /></button></view></view>
+            <view class="section-heading"><view><text class="section-title">{{ isChild ? 'Твои деньги на каждый день' : 'Ваши счета' }}</text><text class="panel-caption">{{ isChild ? 'Здесь только то, что можно тратить.' : 'Доступные остатки без денег, отложенных в копилки.' }}</text></view><text class="section-caption">{{ accounts.length }} {{ accountCountLabel }}</text></view>
+            <view class="accounts-grid" :class="{ 'accounts-grid-single': accounts.length === 1 }"><view v-for="(account, index) in accounts" :key="account.id" class="account-card" :class="{ 'account-frozen': !account.active }"><view class="account-card-heading"><view class="account-icon"><AppIcon name="wallet" :size="23" /></view><view class="account-identity"><text class="account-title">{{ accountName(account, index) }}</text><text class="muted-text">Счёт · {{ account.id }}</text></view><text class="status-pill" :class="{ 'status-frozen': !account.active }">{{ account.active ? 'Активен' : 'Заморожен' }}</text></view><view class="account-amount"><text>{{ money(account.active_balance) }}</text><text class="amount-currency">BYN</text></view><view class="account-limit"><text>Лимит переводов</text><text>{{ account.limit === null ? 'Без ограничений' : `${money(account.limit)} BYN / ${periodLabel(account.limit_period)}` }}</text></view></view></view>
+            <view class="quick-links"><button role="button" class="quick-link" :disabled="navigationLocked" @click="openSection('history')"><view class="quick-icon"><AppIcon name="history" :size="23" /></view><view><text class="quick-title">{{ isChild ? 'Куда и откуда?' : 'История операций' }}</text><text class="quick-caption">{{ isChild ? 'Посмотри свои переводы' : 'Все переводы в одном месте' }}</text></view><AppIcon name="arrow" :size="19" /></button><button role="button" class="quick-link" :disabled="navigationLocked" @click="openSection('family')"><view class="quick-icon"><AppIcon name="family" :size="23" /></view><view><text class="quick-title">{{ isChild ? 'Моя команда — семья' : 'Ваша семья' }}</text><text class="quick-caption">{{ isChild ? 'Вместе мечтать веселее' : 'Участники и общие ресурсы' }}</text></view><AppIcon name="arrow" :size="19" /></button></view>
           </view>
-          <view class="intro-panel"><view class="intro-symbol">↗</view><text class="intro-title">Маленькие шаги. Большие планы.</text><text class="intro-description">Деньги в копилках входят в общий баланс, но недоступны для обычного перевода.</text><view class="intro-footnote"><text class="small-dot" /><text>Учебное демо · без реальных денег</text></view></view>
-        </view>
-
-        <view class="section-heading"><text class="section-title">Мои счета</text><text class="section-caption">{{ accounts.length }} {{ accountCountLabel }}</text></view>
-        <view class="accounts-grid">
-          <view v-for="(account, index) in accounts" :key="account.id" class="account-card" :class="{ 'account-frozen': !account.active }">
-            <view class="account-card-heading"><view class="account-icon">▤</view><view class="account-identity"><text class="account-title">{{ accountName(account, index) }}</text><text class="muted-text">Счёт № {{ account.id }}</text></view><text class="status-pill" :class="{ 'status-frozen': !account.active }">{{ account.active ? 'Активен' : 'Заморожен' }}</text></view>
-            <view class="account-amount"><text>{{ money(account.active_balance) }}</text><text class="amount-currency">BYN</text></view>
-            <text class="account-cash-label">Доступно для трат · накопления показаны в копилках</text>
-            <view class="account-limit"><text>Лимит переводов</text><text>{{ account.limit === null ? 'Не установлен' : `${money(account.limit)} BYN / ${periodLabel(account.limit_period)}` }}</text></view>
-          </view>
-        </view>
-
-        <PigSection :key="currentUser?.id" :user="currentUser" :accounts="accounts" :refresh-key="pigRefreshKey" :money-locked="posting || transferUnknown" @changed="refreshAll(false)" @locked="pigLocked = $event" />
-
-        <view class="workspace-grid">
-          <view class="surface history-panel">
-            <view class="panel-heading"><view><text class="section-title">История переводов</text><text class="panel-caption">Последние операции выбранного счёта</text></view><text class="history-badge">{{ transactions.length }}</text></view>
-            <view class="account-tabs"><button role="button" v-for="account in accounts" :key="account.id" class="account-tab" :class="{ 'account-tab-active': historyAccountId === account.id }" :disabled="posting" @click="selectHistoryAccount(account.id)">{{ accountName(account) }}</button></view>
-            <view v-if="historyError" class="notice notice-error" role="alert"><text>{{ historyError }}</text><button role="button" class="text-button" :disabled="historyLoading || posting" @click="loadHistory(historyAccountId)">Обновить историю</button></view>
-            <view v-if="historyLoading && !transactions.length" class="history-empty"><view class="loader" /><text>Загружаем переводы…</text></view>
-            <view v-else-if="!transactions.length && !historyError" class="history-empty"><view class="empty-symbol">⇄</view><text class="empty-title">Здесь появится первый перевод</text><text>Переведите небольшую сумму между своими счетами, и операция появится в истории.</text></view>
-            <view v-else class="transaction-list"><view v-for="transaction in transactions" :key="transaction.id" class="transaction-row"><view class="transaction-icon" :class="{ 'transaction-incoming': transaction.recipient === historyAccountId }">{{ transaction.recipient === historyAccountId ? '↙' : '↗' }}</view><view class="transaction-content"><text class="transaction-title">{{ transactionTitle(transaction) }}</text><text class="transaction-date">{{ dateLabel(transaction.data) }}</text></view><text class="transaction-amount" :class="{ 'transaction-positive': transaction.recipient === historyAccountId }">{{ transaction.recipient === historyAccountId ? '+' : '−' }}{{ money(transaction.amount) }}<text class="transaction-currency"> BYN</text></text></view></view>
-            <text v-if="transactions.length === 50" class="history-note">Показаны последние 50 переводов.</text>
-          </view>
-        </view>
+          <PigSection v-show="dashboardTab === 'pigs'" :key="currentUser?.id" :user="currentUser" :accounts="accounts" :refresh-key="pigRefreshKey" :money-locked="posting || transferUnknown" @changed="refreshAll(false)" @locked="pigLocked = $event" />
+          <view v-show="dashboardTab === 'history'" class="surface history-panel"><view class="panel-heading"><view><text class="section-title">{{ isChild ? 'Твои переводы' : 'История переводов' }}</text><text class="panel-caption">Выберите счёт, чтобы посмотреть его операции</text></view><text class="history-badge">{{ transactions.length }}</text></view><view class="account-tabs"><button role="button" v-for="account in accounts" :key="account.id" class="account-tab" :class="{ 'account-tab-active': historyAccountId === account.id }" :disabled="posting" @click="selectHistoryAccount(account.id)">{{ accountName(account) }}</button></view><view v-if="historyError" class="notice notice-error" role="alert"><text>{{ historyError }}</text><button role="button" class="text-button" :disabled="historyLoading || posting" @click="loadHistory(historyAccountId)">Обновить историю</button></view><view v-if="historyLoading && !transactions.length" class="history-empty"><view class="loader" /><text>Загружаем переводы…</text></view><view v-else-if="!transactions.length && !historyError" class="history-empty"><view class="empty-symbol"><AppIcon name="history" :size="32" /></view><text class="empty-title">Пока ни одного перевода</text><text>Когда деньги придут или уйдут, операция появится здесь.</text></view><view v-else class="transaction-list"><view v-for="transaction in transactions" :key="transaction.id" class="transaction-row"><view class="transaction-icon" :class="{ 'transaction-incoming': transaction.recipient === historyAccountId }">{{ transaction.recipient === historyAccountId ? '↙' : '↗' }}</view><view class="transaction-content"><text class="transaction-title">{{ transactionTitle(transaction) }}</text><text class="transaction-date">{{ dateLabel(transaction.data) }}</text></view><text class="transaction-amount" :class="{ 'transaction-positive': transaction.recipient === historyAccountId }">{{ transaction.recipient === historyAccountId ? '+' : '−' }}{{ money(transaction.amount) }}<text class="transaction-currency"> BYN</text></text></view></view><text v-if="transactions.length === 50" class="history-note">Показаны последние 50 переводов.</text></view>
+        </template>
+        <view v-else-if="!loadError" class="surface no-accounts"><text class="empty-title">Пока нет доступных счетов</text><text>Ваши счета появятся здесь после подключения.</text></view>
       </template>
-
-      <view v-else-if="!loadError" class="surface no-accounts"><text class="empty-title">Пока нет доступных счетов</text><text>Когда счёт появится в профиле, здесь можно будет посмотреть баланс и выполнить перевод.</text></view>
-
-      <view class="page-footer"><view class="connection-state"><text class="connection-dot" :class="{ 'connection-offline': loadError }" /><text>{{ loadError ? 'Нет связи с API' : lastUpdated ? `Обновлено ${lastUpdated} · каждые 10 сек.` : 'Подключаемся к API' }}</text></view><text>Семейный банк · учебный прототип</text></view>
+      <view class="page-footer"><view class="connection-state"><text class="connection-dot" :class="{ 'connection-offline': loadError }" /><text>{{ loadError ? 'Данные временно недоступны' : lastUpdated ? `Обновлено ${lastUpdated}` : 'Подключаемся' }}</text></view><text>Демонстрация · без реальных денег</text></view>
     </view>
-
     <view v-if="transferOpen" class="modal-overlay" @click.self="closeTransfer">
       <view ref="transferDialog" class="surface transfer-panel transfer-dialog" role="dialog" aria-modal="true" aria-labelledby="transfer-dialog-title" aria-describedby="transfer-dialog-description" tabindex="-1" @click.stop>
         <view class="panel-heading transfer-dialog-heading">
@@ -109,13 +72,36 @@ import { onHide, onShow } from '@dcloudio/uni-app';
 import { api, getDemoUserId, setDemoUserId } from '../../api/client.js';
 import { formatMoney, parseMoney } from '../../utils/money.js';
 import PigSection from '../../components/PigSection.vue';
+import FamilySection from '../../components/FamilySection.vue';
+import AppIcon from '../../components/AppIcon.vue';
+import brandLogo from './img.png';
 
 const currentUser = ref(null);
+const familyOpen = ref(false);
+const dashboardTab = ref('overview');
+const isChild = computed(() => demoUserId.value === 20);
+const activeSection = computed(() => familyOpen.value ? 'family' : dashboardTab.value);
+const navigationLocked = computed(() => posting.value || pigLocked.value || familyLocked.value || transferUnknown.value || switching.value);
+const navigation = computed(() => [
+  {id:'overview', label:isChild.value ? 'Мои деньги' : 'Обзор', icon:'home'},
+  {id:'pigs', label:isChild.value ? 'Мои мечты' : 'Копилки', icon:'pig'},
+  {id:'history', label:'История', icon:'history'},
+  {id:'family', label:'Семья', icon:'family'},
+]);
+const pageTitle = computed(() => dashboardTab.value === 'pigs' ? (isChild.value ? 'Мечтай. Копи. Повторяй ✦' : 'Ближе к большим планам') : dashboardTab.value === 'history' ? (isChild.value ? 'История твоих денег' : 'Каждый перевод под контролем') : isChild.value ? 'Привет, Саша! ✦' : 'Всё важное — рядом');
+const pageDescription = computed(() => dashboardTab.value === 'pigs' ? (isChild.value ? 'Маленькие шаги к тому, чего тебе хочется.' : 'Накопления детей и запросы на разбитие копилок.') : dashboardTab.value === 'history' ? 'Поступления и переводы по вашим счетам.' : isChild.value ? 'Твои деньги сегодня. Твои мечты на завтра.' : 'Управляйте деньгами и заботьтесь о будущем семьи.');
+function openSection(section) {
+  if (navigationLocked.value) return;
+  familyOpen.value = section === 'family';
+  if (section !== 'family') dashboardTab.value = section;
+}
+
+const familyLocked = ref(false);
 const pigRefreshKey = ref(0);
 const pigLocked = ref(false);
 const switching = ref(false);
 const demoUserId = ref(getDemoUserId());
-const demoProfiles = [{ id: 10, label: 'Родитель' }, { id: 20, label: 'Ребёнок' }, { id: 11, label: 'Участник семьи' }];
+const demoProfiles = [{ id: 10, label: 'Родитель' }, { id: 20, label: 'Ребёнок' }];
 const transferOpen = ref(false);
 const transferDialog = ref(null);
 const transferTrigger = ref(null);
@@ -254,7 +240,7 @@ function formatTotal(value) {
 }
 function money(value) { return formatMoney(value); }
 async function changeDemoProfile(id) {
-  if (id === demoUserId.value || posting.value || pigLocked.value || transferUnknown.value || refreshing.value || switching.value) return;
+  if (id === demoUserId.value || posting.value || pigLocked.value || familyLocked.value || transferUnknown.value || refreshing.value || switching.value) return;
   switching.value = true;
   setDemoUserId(id);
   demoUserId.value = id;
@@ -407,145 +393,41 @@ onUnmounted(() => { alive = false; visible = false; clearInterval(pollTimer); hi
 </script>
 
 <style>
-page { background: #f4f6f5; color: #172e2b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
-view, text, button, input { box-sizing: border-box; }
-button { margin: 0; padding: 0; font: inherit; border-radius: 12px; line-height: 1.35; }
-button::after { border: 0; }
-button[disabled] { opacity: .48; cursor: not-allowed; }
-.app-shell { min-height: 100vh; }
-.topbar { background: #2334c8; color: #fff; }
-.topbar-inner { max-width: 1200px; min-height: 82px; margin: auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.brand { display: flex; align-items: center; gap: 13px; font-size: 21px; font-weight: 700; letter-spacing: -.6px; }
-.brand-mark { width: 37px; height: 37px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: #97cfff; color: #2334c8; font-size: 22px; letter-spacing: -3px; padding-right: 3px; }
-.profile { display: flex; align-items: center; gap: 12px; }
-.demo-pill { color: #d7efcc; background: #ffffff12; padding: 6px 9px; border: 1px solid #ffffff20; border-radius: 7px; font-size: 10px; letter-spacing: 1.2px; font-weight: 700; }
-.avatar { display: flex; justify-content: center; align-items: center; width: 33px; height: 33px; border-radius: 50%; background: #e6efe8; color: #31594d; font-size: 13px; font-weight: 700; }
-.profile-label { font-size: 12px; color: #dfebe5; }
-.demo-switch { max-width: 1200px; margin: auto; padding: 0 32px 15px; display: flex; gap: 7px; align-items: center; flex-wrap: wrap; font-size: 10px; color: #9db8a9; }
-.demo-switch > button { font-size: 10px; background: #ffffff0b; color: #c3d6c9; padding: 7px 10px; border-radius: 7px; }
-.demo-switch > button.demo-profile-active { color: #d6f6bd; background: #ffffff20; }
-.account-cash-label { display: block; color: #8c9a90; font-size: 10px; line-height: 1.6; margin: 8px 0 19px; }
-.page-content { max-width: 1200px; margin: auto; padding: 38px 32px 24px; }
-.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
-.eyebrow { display: block; color: #6c8178; font-size: 10px; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; }
-.page-title { display: block; font-size: 31px; font-weight: 700; letter-spacing: -1.1px; line-height: 1.2; }
-.page-description { display: block; color: #7a8983; font-size: 13px; margin-top: 10px; }
-.refresh-button { display: flex; justify-content: center; align-items: center; gap: 7px; background: #fff; border: 1px solid #e2e9e3; color: #416256; padding: 10px 15px; font-size: 12px; white-space: nowrap; min-width: 116px; }
-.refresh-button > text:first-child { font-size: 22px; line-height: 16px; }
-.overview-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 34px; }
-.balance-panel { position: relative; overflow: hidden; background: #1b5146; border-radius: 22px; color: #fff; padding: 26px 30px; }
-.balance-panel-top { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
-.balance-label { color: #c5ded4; font-size: 13px; }
-.currency-label { font-size: 11px; padding: 4px 9px; border: 1px solid #ffffff2e; border-radius: 6px; color: #d8e9e1; }
-.total-balance { display: block; font-size: clamp(26px, 4vw, 44px); font-weight: 600; letter-spacing: -1.7px; margin: 12px 0 27px; position: relative; z-index: 1; overflow-wrap: anywhere; }
-.balance-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; position: relative; z-index: 1; }
-.dot-label { display: flex; align-items: center; gap: 7px; color: #c5ded4; font-size: 11px; }
-.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.dot-mint { background: #9ac8b4; }.dot-lime { background: #ccf58a; }
-.breakdown-value { display: block; font-size: 17px; font-weight: 600; margin-top: 8px; overflow-wrap: anywhere; }
-.balance-decoration { position: absolute; width: 220px; height: 220px; border: 36px solid #ffffff04; border-radius: 50%; pointer-events: none; }
-.decoration-one { top: -45px; right: -55px; }.decoration-two { top: 27px; right: -112px; }
-.intro-panel { display: flex; flex-direction: column; background: #eaf0e5; border: 1px solid #e0e9d9; border-radius: 22px; padding: 22px 26px; position: relative; }
-.intro-symbol { position: absolute; right: 23px; top: 22px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #d1e9b7; color: #45663a; border-radius: 50%; }
-.intro-title { font-size: 24px; font-weight: 600; letter-spacing: -.7px; line-height: 1.23; padding-right: 35px; }
-.intro-description { display: block; max-width: 290px; color: #74816c; font-size: 12px; line-height: 1.6; margin-top: 12px; }
-.intro-footnote { display: flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 17px; font-size: 10px; color: #73826d; }
-.small-dot { width: 5px; height: 5px; border-radius: 50%; background: #8ba974; }
-.section-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.section-title { display: block; font-size: 18px; font-weight: 650; letter-spacing: -.4px; }
-.section-caption { font-size: 11px; color: #8c9a91; }
-.accounts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-bottom: 26px; }
-.account-card { background: #fff; border: 1px solid #e5ebe7; border-radius: 18px; padding: 21px 24px 16px; }
-.account-card-heading { display: flex; align-items: center; gap: 12px; }
-.account-icon { width: 40px; height: 40px; border-radius: 12px; background: #edf1f7; color: #61748d; font-size: 25px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.savings-icon { background: #f7f0db; color: #ad9050; }
-.account-identity { flex: 1; min-width: 0; }
-.account-title { display: block; font-size: 13px; font-weight: 600; }
-.muted-text { display: block; font-size: 10px; color: #95a198; margin-top: 4px; }
-.status-pill { font-size: 9px; color: #4b8d6a; background: #edf7ef; padding: 5px 8px; border-radius: 6px; }
-.status-frozen { color: #8b788d; background: #f1eef5; }
-.account-amount { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: 28px; font-weight: 600; letter-spacing: -.9px; margin-top: 22px; overflow-wrap: anywhere; }
-.amount-currency { font-size: 12px; font-weight: 400; letter-spacing: 0; color: #9ba69e; }
-.account-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 18px 0; }
-.account-details > view { display: flex; flex-direction: column; gap: 5px; font-size: 10px; color: #8b9990; }
-.detail-value { font-size: 12px; color: #4b6658; font-weight: 500; }
-.account-limit { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; border-top: 1px solid #f0f3ef; padding-top: 13px; color: #9ba59e; font-size: 10px; }
-.account-limit > text:last-child { color: #728578; }
-.workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
-.surface { background: #fff; border: 1px solid #e5ebe7; border-radius: 18px; padding: 25px; }
-.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 23px; }
-.panel-caption { display: block; font-size: 11px; color: #8d9a91; margin-top: 7px; }
-.transfer-symbol { font-size: 25px; color: #689c81; }
-.form-field { margin-top: 17px; }
-.field-label { display: block; font-size: 11px; font-weight: 500; color: #6d8074; margin-bottom: 8px; }
-.select-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid #e6ece7; border-radius: 11px; background: #fafcf9; min-height: 64px; }
-.select-title { display: block; font-size: 12px; font-weight: 500; color: #3b5a49; }
-.select-description { display: block; font-size: 10px; color: #98a69c; margin-top: 5px; }
-.select-chevron { color: #92a396; font-size: 20px; }
-.amount-input-wrap { border: 1px solid #dfe7e0; border-radius: 11px; display: flex; align-items: center; gap: 12px; min-height: 59px; padding: 12px 15px; }
-.amount-input-wrap:focus-within { border-color: #72a78d; box-shadow: 0 0 0 3px #6b9c7e12; }
-.amount-input-wrap > text { font-size: 12px; color: #90a092; }
-.amount-input { flex: 1; min-width: 0; height: 33px; font-size: 24px; color: #244f3c; letter-spacing: -.8px; }
-.field-hint { display: block; color: #8c9c90; font-size: 10px; line-height: 1.5; margin-top: 8px; min-height: 15px; }
-.field-hint-error { color: #ae745b; }
-.primary-button { width: 100%; background: #205d49; color: #fff; padding: 15px 20px; font-size: 13px; font-weight: 600; margin-top: 22px; }
-.primary-button[disabled] { background: #b9cec0; color: #fff; opacity: .8; }
-.transfer-footnote { display: block; margin: 12px auto 0; max-width: 270px; text-align: center; font-size: 9px; line-height: 1.5; color: #99a69b; }
-.history-badge { min-width: 25px; height: 25px; padding: 5px 7px; border-radius: 8px; background: #f1f5ef; color: #7e927d; font-size: 11px; text-align: center; }
-.account-tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #edf1ed; padding-bottom: 17px; margin-bottom: 1px; }
-.account-tab { font-size: 10px; color: #8c9c90; padding: 8px 11px; border-radius: 8px; background: #f5f7f4; border: 1px solid transparent; }
-.account-tab-active { color: #3a7553; background: #eef6e9; border-color: #dce9d4; }
-.transaction-row { display: flex; align-items: center; gap: 11px; padding: 19px 0; border-bottom: 1px solid #f0f3ef; }
-.transaction-row:last-child { border-bottom: 0; }
-.transaction-icon { display: flex; align-items: center; justify-content: center; width: 35px; height: 35px; border-radius: 11px; background: #f3f4f1; color: #8a9a87; font-size: 19px; flex-shrink: 0; }
-.transaction-incoming { background: #edf7e9; color: #6d9a5b; }
-.transaction-content { flex: 1; min-width: 0; }
-.transaction-title { display: block; font-size: 11px; font-weight: 500; line-height: 1.5; }
-.transaction-date { display: block; color: #a1aca2; font-size: 10px; margin-top: 5px; }
-.transaction-amount { font-size: 13px; font-weight: 600; white-space: nowrap; }
-.transaction-positive { color: #44855b; }
-.transaction-currency { font-size: 9px; font-weight: 400; color: #99a397; }
-.history-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 280px; color: #9aa69b; font-size: 11px; line-height: 1.7; max-width: 320px; margin: auto; gap: 9px; }
-.empty-symbol { width: 59px; height: 59px; margin-bottom: 4px; border-radius: 20px; background: #f1f6ee; font-size: 32px; color: #b1c5a7; display: flex; align-items: center; justify-content: center; }
-.empty-title { display: block; font-size: 13px; font-weight: 600; color: #627b62; }
-.history-note { display: block; text-align: center; color: #98a393; font-size: 10px; margin-top: 15px; }
-.notice { display: flex; flex-direction: column; gap: 5px; padding: 13px 15px; margin-bottom: 18px; font-size: 11px; line-height: 1.65; border-radius: 10px; }
-.notice-error { background: #82aed3; border: 1px solid #2334c8; color: #a56d53; }
-.notice-success { background: #eef7eb; border: 1px solid #dfedda; color: #5b8051; }
-.notice-title { font-weight: 600; }
-.text-button { background: transparent; color: inherit; font-size: 11px; align-self: flex-start; padding-top: 5px; text-decoration: underline; }
-.loading-panel { display: flex; align-items: center; justify-content: center; min-height: 350px; gap: 15px; color: #829886; font-size: 14px; }
-.loader { width: 22px; height: 22px; border: 2px solid #dce9da; border-top-color: #719a70; border-radius: 50%; animation: spin 1s linear infinite; }
-.spinning { display: inline-block; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.no-accounts { display: flex; flex-direction: column; gap: 13px; text-align: center; padding: 70px 30px; font-size: 12px; color: #93a08f; }
-.page-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 9px; color: #a2ada1; margin-top: 30px; }
-.connection-state { display: flex; align-items: center; gap: 6px; }
-.connection-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #7bad77; }
-.connection-offline { background: #cb9c7b; }
-@media (min-width: 1500px) { .page-content { padding-top: 44px; } }
-@media (max-width: 900px) { .topbar-inner { padding: 16px 24px; }.page-content { padding: 30px 24px 24px; }.overview-grid { grid-template-columns: 1.3fr 1fr; gap: 15px; }.balance-panel { padding: 24px; }.intro-panel { padding: 22px; }.intro-title { font-size: 21px; }.intro-description { font-size: 11px; }.workspace-grid { grid-template-columns: 1fr 1.15fr; gap: 15px; }.surface { padding: 21px; }.account-card { padding: 20px; }.transaction-row { gap: 8px; }.transaction-title { font-size: 10px; }.transaction-amount { font-size: 11px; }.transaction-currency { display: block; text-align: right; margin-top: 4px; } }
-@media (max-width: 700px) { .topbar-inner { min-height: 68px; padding: 15px 20px; }.brand { font-size: 18px; gap: 10px; }.brand-mark { width: 32px; height: 32px; border-radius: 10px; font-size: 20px; }.profile-label, .avatar { display: none; }.page-content { padding: 27px 18px 22px; }.page-heading { align-items: flex-start; gap: 10px; }.page-title { font-size: 25px; letter-spacing: -.9px; }.eyebrow { font-size: 9px; }.page-description { font-size: 11px; max-width: 220px; line-height: 1.6; }.refresh-button { min-width: 0; font-size: 0; width: 38px; height: 38px; padding: 0; border-radius: 11px; margin-top: 15px; }.refresh-button > text:first-child { font-size: 24px; }.overview-grid { grid-template-columns: 1fr; margin-bottom: 27px; gap: 12px; }.balance-panel { padding: 25px; border-radius: 18px; }.total-balance { font-size: 40px; margin-bottom: 25px; }.breakdown-value { font-size: 16px; }.intro-panel { padding: 17px 20px; border-radius: 15px; }.intro-title { font-size: 17px; padding-right: 35px; }.intro-title br { display: none; }.intro-description { font-size: 11px; margin-top: 8px; max-width: none; padding-right: 15px; }.intro-symbol { top: 15px; right: 17px; width: 29px; height: 29px; font-size: 21px; }.intro-footnote { padding-top: 12px; font-size: 9px; }.accounts-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 23px; }.account-card { padding: 19px 20px 15px; border-radius: 16px; }.account-amount { margin-top: 17px; font-size: 27px; }.account-details { padding: 16px 0; }.workspace-grid { grid-template-columns: 1fr; gap: 19px; }.surface { padding: 23px 21px; border-radius: 16px; }.section-title { font-size: 18px; }.history-empty { min-height: 235px; }.transaction-title { font-size: 11px; }.transaction-amount { font-size: 13px; }.transaction-currency { display: inline; font-size: 9px; }.history-panel { padding-bottom: 16px; }.page-footer { font-size: 9px; line-height: 1.6; margin-top: 25px; }.page-footer > text { display: none; } }
-@media (max-width: 360px) { .page-content { padding-left: 13px; padding-right: 13px; }.brand { font-size: 16px; }.page-title { font-size: 23px; }.balance-panel { padding: 22px; }.total-balance { font-size: 35px; }.breakdown-value { font-size: 14px; }.balance-breakdown { gap: 12px; }.dot-label { font-size: 10px; }.transaction-currency { display: block; }.surface { padding: 21px 17px; } }
-.heading-actions { display: flex; align-items: center; gap: 10px; }
-.open-transfer-button { display: flex; justify-content: center; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 11px; background: #205d49; color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; }
-.open-transfer-button > text { font-size: 19px; line-height: 18px; }
-.open-transfer-button[disabled] { background: #b9cec0; color: #fff; }
-.workspace-grid { grid-template-columns: minmax(0, 1fr); }
-.modal-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(14, 37, 30, .49); backdrop-filter: blur(4px); }
-.transfer-dialog { width: 100%; max-width: 480px; max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; padding: 0; box-shadow: 0 24px 100px #102f3940; border-radius: 21px; overflow: hidden; }
-.transfer-dialog:focus { outline: none; }
-.transfer-dialog-heading { flex-shrink: 0; margin: 0; padding: 23px 25px 19px; border-bottom: 1px solid #edf1ed; }
-.modal-close { width: 33px; height: 33px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; border-radius: 10px; background: #f1f5ef; color: #758c78; font-size: 25px; font-weight: 400; line-height: 1; }
-.modal-close:focus-visible, .open-transfer-button:focus-visible, .transfer-dialog .text-button:focus-visible, .transfer-dialog .primary-button:focus-visible { outline: 2px solid #83b699; outline-offset: 3px; }
-.transfer-dialog-body { min-height: 0; padding: 21px 25px 25px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
-.transfer-dialog-body > .form-field:first-child { margin-top: 0; }
-.modal-state-message { display: block; text-align: center; margin-top: 12px; color: #8b9a8e; font-size: 10px; line-height: 1.6; }
-.verification-history { border-top: 1px solid #efdace; border-bottom: 1px solid #efdace; margin: 7px 0; }
-.verification-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f0ded3; }
-.verification-row:last-child { border-bottom: 0; }
-.verification-row > view { flex: 1; min-width: 0; }
-.verification-amount { font-size: 10px; font-weight: 600; white-space: nowrap; }
-.verification-empty { display: block; padding: 10px 0; }
-@media (max-width: 700px) { .page-heading { flex-wrap: wrap; }.heading-actions { width: 100%; margin-top: 8px; }.open-transfer-button { flex: 1; min-height: 43px; }.heading-actions .refresh-button { width: 43px; height: 43px; margin-top: 0; }.modal-overlay { padding: 12px; }.transfer-dialog { border-radius: 18px; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }.transfer-dialog-heading { padding: 21px 21px 17px; }.transfer-dialog-body { padding: 20px 21px 23px; } }
+
+page { background:#f4f6fb;color:#20274b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+view,text,button,input { box-sizing:border-box; }
+button { margin:0;padding:0;font:inherit;line-height:1.4;border-radius:12px;cursor:pointer; }
+button::after { border:0; }
+button[disabled],button[aria-disabled="true"] { opacity:.45;cursor:not-allowed; }
+button:focus-visible,[role="tab"]:focus-visible { outline:3px solid #6a7fb9;outline-offset:4px; }
+.app-shell { min-height:100vh;background:#f4f6fb; }
+.topbar { background:#20256b;color:white;position:sticky;top:0;z-index:30;box-shadow:0 3px 16px #17215b0c; }
+.topbar-inner { max-width:1240px;margin:auto;padding:18px 36px;display:flex;align-items:center;justify-content:space-between;gap:28px; }
+.brand { display:flex;align-items:center;gap:12px;flex-shrink:0; }.brand-logo { width:46px;height:46px;display:block;border-radius:14px;overflow:hidden; }.brand-name { display:block;font-size:18px;font-weight:750;letter-spacing:.4px; }.brand-caption { display:block;font-size:10px;color:#949db8;margin-top:4px; }
+.main-navigation { display:flex;gap:5px;align-items:center; }.navigation-tab { display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 15px;background:transparent;color:#949db8;font-size:13px;white-space:nowrap;transition:background .18s; }.navigation-tab:hover { background:#ffffff0b; }.navigation-tab.navigation-active { color:#ffffff;background:#ffffff13;box-shadow:inset 0 -2px 0 #ffce66;border-radius:10px 10px 4px 4px; }
+.profile-switcher { display:flex;flex-direction:column;align-items:flex-end;gap:6px; }.demo-label { font-size:8px;letter-spacing:1.5px;color:#949db8; }.profile-options { display:flex;padding:3px;border-radius:9px;background:#ffffff09;border:1px solid #ffffff16; }.profile-options>button { font-size:10px;padding:7px 10px;color:#949db8;background:transparent;border-radius:6px; }.profile-options>button.profile-selected { background:#e7edff;color:#2c4083;font-weight:600; }
+.page-content { max-width:1160px;margin:auto;padding:42px 36px 24px; }
+.page-heading { display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:30px; }.eyebrow { display:block;font-size:10px;font-weight:650;letter-spacing:1.7px;color:#7283b0;margin-bottom:12px; }.page-title { display:block;font-size:34px;line-height:1.2;font-weight:700;letter-spacing:-1.1px;color:#20274b; }.page-description { display:block;font-size:13px;line-height:1.7;color:#6274a6;margin-top:10px; }.heading-actions { display:flex;gap:10px;align-items:center;flex-shrink:0; }
+.open-transfer-button { display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 19px;min-height:46px;background:#2463eb;color:white;font-size:13px;font-weight:600;box-shadow:0 4px 12px #2463eb1a; }.open-transfer-button:hover { background:#194fc9; }.refresh-button { display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:white;border:1px solid #d9dde9;border-radius:12px; }
+.overview-grid { display:grid;grid-template-columns:1.35fr 1fr;gap:22px;margin-bottom:36px; }.balance-panel { background:#3035b6;border-radius:22px;position:relative;overflow:hidden;color:white;padding:28px 32px;min-height:280px; }.balance-panel-top { display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1; }.balance-label { font-size:14px;color:#d0d5e3; }.balance-emblem { display:flex;align-items:center;justify-content:center;width:39px;height:39px;border:1px solid #ffffff25;background:#ffffff08;border-radius:12px; }.balance-number { display:flex;align-items:baseline;gap:12px;margin:10px 0 32px;position:relative;z-index:1; }.total-balance { font-size:clamp(30px,4vw,50px);line-height:1.2;font-weight:650;letter-spacing:-1.9px;overflow-wrap:anywhere;min-width:0; }.currency-label { font-size:16px;color:#929cba; }
+.balance-breakdown { display:grid;grid-template-columns:1fr 1fr;gap:18px;position:relative;z-index:1;border-top:1px solid #ffffff1c;padding-top:20px; }.breakdown-label { display:block;font-size:11px;line-height:1.5;color:#8f9bbd; }.breakdown-value { display:block;font-size:16px;font-weight:550;margin-top:7px;overflow-wrap:anywhere; }.balance-decoration { position:absolute;width:280px;height:280px;border:45px solid #ffffff04;border-radius:50%;top:-30px;right:-90px;pointer-events:none; }
+.intro-panel { background:#e5e8f0;border:1px solid #d7dce8;border-radius:22px;padding:25px 28px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start; }.intro-title { display:block;font-size:23px;line-height:1.25;letter-spacing:-.5px;font-weight:650;max-width:250px;margin-top:4px;position:relative;z-index:1; }.intro-description { display:block;color:#5a6da0;font-size:12px;line-height:1.8;max-width:290px;margin:12px 0 19px;position:relative;z-index:1; }.intro-action { margin-top:auto;display:flex;align-items:center;gap:10px;color:#3a4666;font-size:12px;font-weight:600;background:#d2d8e9;border-radius:10px;padding:11px 14px;position:relative;z-index:1; }
+.dream-illustration { position:absolute;width:180px;height:180px;right:-46px;bottom:-36px;pointer-events:none;opacity:.6; }.dream-orbit { position:absolute;border:1px solid #8f9bbc60;border-radius:50%;inset:8px; }.orbit-two { inset:26px; }.dream-coin { position:absolute;inset:48px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#7d93cf;box-shadow:0 0 0 10px #cad3ea80; }.dream-star { position:absolute;font-size:25px;color:#57699b; }.star-one { top:15px;left:25px; }.star-two { bottom:20px;right:28px;font-size:34px; }
+.section-heading { display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px; }.section-title { display:block;font-size:20px;font-weight:650;letter-spacing:-.4px;color:#29324a; }.section-caption { font-size:11px;color:#7787b2;border:1px solid #d7dce8;background:#e8ebf2;padding:6px 10px;border-radius:8px;white-space:nowrap; }.panel-caption { display:block;font-size:12px;line-height:1.6;color:#6e7fad;margin-top:6px; }
+.accounts-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:24px; }.account-card { background:white;border:1px solid #d8dde9;border-radius:17px;padding:23px 25px 18px;box-shadow:0 3px 10px #17215b08; }.account-card-heading { display:flex;align-items:center;gap:12px; }.account-icon { width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:#e7eaf2;border-radius:12px;flex-shrink:0; }.account-identity { flex:1;min-width:0; }.account-title { display:block;font-size:14px;font-weight:600;color:#35405f; }.muted-text { display:block;font-size:11px;color:#808eb7;margin-top:4px; }.status-pill { font-size:10px;color:#516290;background:#e8ebf5;padding:5px 9px;border-radius:6px; }.status-frozen { color:#917684;background:#f4edf0; }.account-amount { display:flex;align-items:baseline;gap:8px;font-size:31px;font-weight:650;letter-spacing:-.8px;margin:24px 0 22px;color:#29324a;overflow-wrap:anywhere; }.amount-currency { font-size:13px;color:#7b8bb5;font-weight:400;letter-spacing:0; }.account-limit { display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid #e7eaf1;padding-top:14px;font-size:11px;color:#7b8ab4; }.account-limit>text:last-child { color:#526493; }
+.accounts-grid-single { grid-template-columns:1fr; }
+.child-theme .account-card { display:grid;grid-template-columns:1fr auto;gap:0 24px; }.child-theme .account-amount { grid-column:2;grid-row:1;margin:0;align-self:center; }.child-theme .account-limit { grid-column:1 / -1;margin-top:20px; }
+.quick-links { display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:4px; }.quick-link { width:100%;display:flex;align-items:center;gap:15px;text-align:left;background:#e8eaf1;border:1px solid #d7dce8;border-radius:15px;padding:17px 20px; }.quick-link>view:nth-child(2) { flex:1; }.quick-icon { display:flex;align-items:center;justify-content:center;width:38px;height:38px;background:#ffffffa0;border-radius:11px; }.quick-title { display:block;font-size:13px;font-weight:600;color:#3c496b; }.quick-caption { display:block;font-size:11px;color:#6d7ead;margin-top:5px; }
+.surface { background:white;border:1px solid #d8dde9;border-radius:18px;padding:26px; }.panel-heading { display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:22px; }.history-badge { display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:9px;font-size:12px;color:#566798;background:#e8ebf3; }.account-tabs { display:flex;flex-wrap:wrap;gap:8px;padding-bottom:20px;border-bottom:1px solid #e2e5ee; }.account-tab { padding:10px 14px;font-size:12px;color:#6b7cab;background:#f0f1f6;border:1px solid transparent;border-radius:9px; }.account-tab-active { color:#3b496e;background:#e0e5f1;border-color:#c9d0e4;font-weight:600; }.transaction-row { display:flex;align-items:center;gap:14px;padding:20px 0;border-bottom:1px solid #e7eaf1; }.transaction-row:last-child { border:0; }.transaction-icon { display:flex;align-items:center;justify-content:center;width:42px;height:42px;flex-shrink:0;background:#ebedf3;color:#6476a8;font-size:22px;border-radius:13px; }.transaction-incoming { background:#e4e9f6;color:#546595; }.transaction-content { flex:1;min-width:0; }.transaction-title { display:block;font-size:13px;font-weight:500;line-height:1.6; }.transaction-date { display:block;color:#8392ba;font-size:11px;margin-top:4px; }.transaction-amount { font-size:16px;font-weight:600;white-space:nowrap; }.transaction-positive { color:#435587; }.transaction-currency { color:#8594bb;font-size:10px;font-weight:400; }.history-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;min-height:270px;max-width:330px;margin:auto;text-align:center;color:#7080ae;font-size:13px;line-height:1.8; }.empty-symbol { width:68px;height:68px;display:flex;align-items:center;justify-content:center;background:#e9ecf5;border-radius:21px;margin-bottom:4px; }.empty-title { font-size:16px;font-weight:600;color:#4a5a84; }.history-note { display:block;text-align:center;color:#7988b3;font-size:11px;margin-top:20px; }
+.notice { display:flex;flex-direction:column;gap:5px;padding:15px 18px;border-radius:12px;font-size:12px;line-height:1.7;margin-bottom:20px; }.notice-error { background:#fbf0e8;color:#9b7359;border:1px solid #f1dfcf; }.notice-success { background:#e5e9f5;color:#4c5b86;border:1px solid #d0d7e9; }.notice-title { font-weight:650; }.text-button { align-self:flex-start;background:transparent;color:inherit;font-size:12px;padding:7px 0;text-decoration:underline;text-underline-offset:3px; }.loading-panel { min-height:320px;display:flex;align-items:center;justify-content:center;gap:14px;color:#6577a8;font-size:14px; }.loader { width:22px;height:22px;border-radius:50%;border:2px solid #d0d6e6;border-top-color:#566899;animation:spin 1s linear infinite; }.spinning { animation:spin 1s linear infinite; }@keyframes spin { to { transform:rotate(360deg); } }.no-accounts { display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:65px 25px;color:#7484b1;font-size:13px; }
+.page-footer { display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:10px;color:#8694bb;margin-top:32px;padding-top:17px;border-top:1px solid #dde1ec; }.connection-state { display:flex;align-items:center;gap:7px; }.connection-dot { width:5px;height:5px;border-radius:50%;background:#6f80ae; }.connection-offline { background:#b99071; }
+.modal-overlay { position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:#141c48aa;backdrop-filter:blur(5px); }.transfer-dialog { width:100%;max-width:470px;max-height:calc(100dvh - 40px);padding:0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 100px #17215b33;border-radius:22px; }.transfer-dialog:focus { outline:none; }.transfer-dialog-heading { padding:25px 26px 20px;border-bottom:1px solid #e7eaf1;margin:0;flex-shrink:0; }.modal-close { width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#ebeef5;color:#6b7cac;border-radius:10px;font-size:25px; }.transfer-dialog-body { padding:23px 26px 27px;overflow:auto;min-height:0;overscroll-behavior:contain; }.form-field { margin-top:19px; }.field-label { display:block;margin-bottom:8px;font-size:12px;color:#50618f;font-weight:550; }.select-field { display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid #d8dce8;background:#f5f7fb;border-radius:11px;min-height:66px; }.select-title { display:block;color:#394566;font-size:13px; }.select-description { display:block;color:#808eb7;font-size:11px;margin-top:5px; }.select-chevron { color:#7080ae;font-size:22px; }.amount-input-wrap { display:flex;align-items:center;gap:15px;border:1px solid #d1d6e5;border-radius:11px;padding:12px 16px; }.amount-input-wrap:focus-within { border-color:#7082b5;box-shadow:0 0 0 3px #c8d1eb40; }.amount-input { flex:1;min-width:0;height:40px;font-size:26px;color:#2e3b5e; }.amount-input-wrap>text { color:#7081af;font-size:13px; }.field-hint { display:block;line-height:1.6;color:#7787b2;font-size:11px;margin-top:8px; }.field-hint-error { color:#ac8060; }.primary-button { display:block;width:100%;background:#2463eb;color:white;font-size:14px;font-weight:600;padding:15px 20px;margin-top:24px; }.primary-button[disabled] { background:#8f9bbc; }.transfer-footnote,.modal-state-message { display:block;color:#7e8db6;text-align:center;font-size:11px;line-height:1.7;margin-top:12px; }.verification-history { border-top:1px solid #ecd9c8;border-bottom:1px solid #ecd9c8; }.verification-row { display:flex;justify-content:space-between;gap:12px;padding:12px 0; }.verification-amount { font-size:11px;white-space:nowrap; }.verification-empty { padding:12px 0;font-size:12px; }
+/* The child area uses the same palette with warmer surfaces and playful shapes. */
+.child-theme { background:linear-gradient(160deg,#edf3ff 0%,#fff7ee 70%); }.child-theme .brand-logo { border-radius:50%;box-shadow:0 0 0 3px #ffce6625; }.child-theme .page-title { font-size:36px;letter-spacing:-1.2px;color:#293f83; }.child-theme .eyebrow { color:#697bab; }.child-theme .balance-panel { border-radius:30px;background:#3856c5;box-shadow:0 8px 0 #ccd4e9; }.child-theme .balance-label { font-size:17px;color:#d5dcf0;font-weight:600; }.child-theme .total-balance { font-size:55px;color:#fff0c7; }.child-theme .balance-breakdown { border-top-style:dashed; }.child-theme .intro-panel { border-radius:30px;background:#edf0ff;border-color:#c9d1e8;padding-bottom:29px; }.child-theme .intro-title { max-width:240px;font-size:27px;color:#394d94; }.child-theme .intro-description { max-width:230px;color:#6073a6;font-size:13px; }.child-theme .dream-illustration { opacity:1;right:-30px;bottom:-17px;transform:rotate(-12deg); }.child-theme .intro-action { background:#d7e3ff;border-radius:14px;padding:13px 17px; }.child-theme .account-card { border-radius:24px;border:2px solid #d8ddea;background:#ffffff; }.child-theme .account-icon { border-radius:50%;background:#d2daf0;width:47px;height:47px; }.child-theme .quick-link { border-radius:22px;background:#dfe4f2;padding:20px;border:1px solid #ced5e8; }.child-theme .quick-icon { border-radius:50%;background:#eef1fb; }.child-theme .surface { border-radius:24px; }.child-theme .navigation-active { color:#ffffff; }
+@media(min-width:1400px) { .page-content { padding-top:50px; } }
+@media(max-width:1050px) { .topbar-inner { gap:15px;padding:16px 25px; }.brand-caption { display:none; }.brand-name { font-size:16px; }.brand-logo { width:39px;height:39px; }.navigation-tab { padding:12px 10px;font-size:12px;gap:6px; }.profile-options>button { padding:6px 8px; }.page-content { padding:32px 25px 22px; } }
+@media(max-width:760px) { .topbar-inner { flex-wrap:wrap;padding:14px 19px 0;gap:16px; }.brand { flex:1; }.brand-name { font-size:16px; }.brand-logo { width:37px;height:37px; }.profile-switcher { margin-left:auto; }.demo-label { font-size:7px; }.profile-options>button { padding:6px 8px;font-size:9px; }.main-navigation { order:3;width:100%;gap:0;justify-content:space-between; }.navigation-tab { flex:1;padding:13px 4px 15px;flex-direction:column;gap:5px;font-size:10px;border-radius:8px 8px 0 0; }.page-content { padding:27px 18px 20px; }.page-heading { gap:14px;align-items:flex-start;margin-bottom:23px;flex-wrap:wrap; }.eyebrow { font-size:8px;letter-spacing:1.3px;margin-bottom:10px; }.page-title,.child-theme .page-title { font-size:28px;letter-spacing:-.8px; }.page-description { font-size:12px;max-width:310px; }.heading-actions { margin-top:3px; }.open-transfer-button { min-height:43px;padding:12px 15px;font-size:12px; }.refresh-button { width:43px;height:43px; }.overview-grid { grid-template-columns:1fr;gap:18px;margin-bottom:31px; }.balance-panel { padding:24px 25px;min-height:247px;border-radius:22px; }.total-balance,.child-theme .total-balance { font-size:46px; }.balance-number { margin-bottom:25px; }.balance-breakdown { padding-top:18px; }.breakdown-label { font-size:10px; }.breakdown-value { font-size:15px; }.intro-panel { min-height:195px;padding:22px 24px; }.intro-title { max-width:240px;font-size:22px; }.intro-description { max-width:250px;font-size:12px;margin-bottom:16px; }.dream-illustration { width:170px;height:170px;right:-30px;bottom:-26px; }.child-theme .intro-title { font-size:24px; }.child-theme .intro-panel { min-height:219px; }.child-theme .dream-illustration { right:-39px; }.accounts-grid { grid-template-columns:1fr;gap:13px;margin-bottom:17px; }.account-card { padding:21px 22px 17px; }.account-amount { font-size:30px;margin:21px 0; }.section-title { font-size:18px; }.panel-caption { font-size:11px; }.section-heading { gap:10px;align-items:flex-start; }.section-caption { font-size:10px; }.quick-links { grid-template-columns:1fr;gap:12px; }.quick-link { padding:17px 20px; }.surface { padding:22px; }.transaction-row { gap:10px; }.transaction-title { font-size:12px; }.transaction-amount { font-size:14px; }.transaction-currency { display:block;text-align:right;font-size:9px; }.account-tabs { gap:6px; }.account-tab { font-size:11px;padding:10px 12px; }.modal-overlay { padding:12px; }.transfer-dialog { padding:0;max-height:calc(100dvh - 24px); }.transfer-dialog-heading { padding:22px; }.transfer-dialog-body { padding:20px 22px 24px; }.page-footer { font-size:9px;gap:10px;margin-top:27px; } }
+@media(max-width:760px) { .child-theme .account-card { display:block; }.child-theme .account-amount { margin:21px 0; }.child-theme .account-limit { margin-top:0; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important;transition:none!important; } }
+
 </style>

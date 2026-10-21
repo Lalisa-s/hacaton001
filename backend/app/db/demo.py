@@ -2,6 +2,7 @@ from sqlalchemy import Engine, func, select, text
 from sqlalchemy.orm import Session
 
 from app.db.base import Base
+from app.models.family import FamilyRemoval
 from app.models import (
     Account, ChaildProfile, ChildAccountAccess, EcoFamily, FamilyAccount,
     FamilyMember, Pig, PigState, User,
@@ -79,6 +80,8 @@ def initialize_demo_database(engine: Engine) -> None:
             raise ValueError("Demo family ID 1 has another administrator.")
         session.flush()
         for user_id in (10, 11, 20):
+            if session.get(FamilyRemoval, user_id) is not None:
+                continue
             member = session.get(FamilyMember, user_id)
             if member is None:
                 session.add(FamilyMember(user_id=user_id, family_id=1))

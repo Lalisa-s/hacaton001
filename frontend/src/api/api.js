@@ -16,6 +16,10 @@ const SAFE_MESSAGES = {
   REQUEST_RESOLVED: 'Запрос уже рассмотрен. Обновите данные.',
   REQUEST_ALREADY_RESOLVED: 'Запрос уже рассмотрен. Обновите данные.',
   INVALID_RESERVE: 'Не удалось проверить накопления. Обновите данные.',
+  ADMIN_CANNOT_LEAVE: 'Администратор не может удалить себя из семьи.',
+  CHILDREN_IN_FAMILY: 'Сначала нужно отключить детей этого законного представителя.',
+  ALREADY_IN_FAMILY: 'Этот профиль уже состоит в семье.',
+  INVITATION_UNAVAILABLE: 'Приглашение уже использовано или срок действия истёк.',
   FAMILY_NOT_FOUND: 'Профиль пока не подключён к экосемье.',
   INVALID_PIG_ACCOUNT: 'Выберите счёт, связанный с этим ребёнком.',
 };
@@ -158,6 +162,13 @@ export function createApi({ baseUrl, request }) {
     },
 
     getFamilyMembers() { return send('GET', '/family/members'); },
+    getFamily() { return send('GET', '/family'); },
+    inviteFamily() { return send('POST', '/family/invitations', {}); },
+    acceptFamilyInvitation(token) { return send('POST', '/family/invitations/accept', { token }); },
+    removeFamilyMember(id) {
+      requirePositiveInteger(id, 'id');
+      return send('DELETE', `/family/members/${id}`);
+    },
     getPigs() { return send('GET', '/pigs'); },
     getPigRequests() { return send('GET', '/pig-break-requests'); },
     createPig({ account_id, child_user_id, name, goal_balance }) {

@@ -77,10 +77,16 @@ def main() -> int:
             child_env["PATH"] = str(Path(command[0]).parent) + os.pathsep + env.get("PATH", "")
             processes.append(subprocess.Popen(command, cwd=cwd, env=child_env, **options))
             print(f"Started {cwd.name}: PID {processes[-1].pid}", flush=True)
+        reported = set()
+        exit_code = 0
         while True:
-            for process in processes:
-                if process.poll() is not None:
-                    return process.returncode or 0
+            for index, process in enumerate(processes):
+                if process.poll() is not None and index not in reported:
+                    reported.add(index)
+                    exit_code = process.returncode or exit_code
+                    print(f"{commands[index][1].name} stopped: exit {process.returncode}. Other servers remain running.", flush=True)
+            if len(reported) == len(processes):
+                return exit_code
             time.sleep(0.5)
     except KeyboardInterrupt:
         return 0

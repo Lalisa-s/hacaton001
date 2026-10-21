@@ -82,3 +82,30 @@ class PigBreakRequest(Base):
     status: Mapped[str] = mapped_column(String(10), default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class SharedFamilyAccount(Base):
+    __tablename__ = "shared_family_accounts"
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("eco_families.id"), index=True)
+
+
+class SharedFamilyPig(Base):
+    __tablename__ = "shared_family_pigs"
+    pig_id: Mapped[int] = mapped_column(ForeignKey("pigs.id"), primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("eco_families.id"), index=True)
+
+
+class FamilyRemoval(Base):
+    __tablename__ = "family_removals"
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("eco_families.id"))
+
+
+class FamilyInvitation(Base):
+    __tablename__ = "family_invitations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("eco_families.id"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    accepted_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)

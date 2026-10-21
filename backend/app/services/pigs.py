@@ -293,6 +293,8 @@ def list_requests(db: Session, actor_id: int) -> list[RequestView]:
         statement = statement.where(PigBreakRequest.parent_id == user.id)
     result = []
     for request in db.scalars(statement.order_by(PigBreakRequest.created_at.desc(), PigBreakRequest.id.desc())):
+        if family_id(db, request.child_user_id) != family_id(db, user.id):
+            continue
         pig, state, profile = _pig(db, request.pig_id)
         _check_visible(db, user, pig, state)
         if user.role == "parent" and profile.parent_id != user.id:
