@@ -413,10 +413,10 @@ button { margin: 0; padding: 0; font: inherit; border-radius: 12px; line-height:
 button::after { border: 0; }
 button[disabled] { opacity: .48; cursor: not-allowed; }
 .app-shell { min-height: 100vh; }
-.topbar { background: #163a33; color: #fff; }
+.topbar { background: #2334c8; color: #fff; }
 .topbar-inner { max-width: 1200px; min-height: 82px; margin: auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .brand { display: flex; align-items: center; gap: 13px; font-size: 21px; font-weight: 700; letter-spacing: -.6px; }
-.brand-mark { width: 37px; height: 37px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: #ccf58a; color: #173b34; font-size: 22px; letter-spacing: -3px; padding-right: 3px; }
+.brand-mark { width: 37px; height: 37px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: #97cfff; color: #2334c8; font-size: 22px; letter-spacing: -3px; padding-right: 3px; }
 .profile { display: flex; align-items: center; gap: 12px; }
 .demo-pill { color: #d7efcc; background: #ffffff12; padding: 6px 9px; border: 1px solid #ffffff20; border-radius: 7px; font-size: 10px; letter-spacing: 1.2px; font-weight: 700; }
 .avatar { display: flex; justify-content: center; align-items: center; width: 33px; height: 33px; border-radius: 50%; background: #e6efe8; color: #31594d; font-size: 13px; font-weight: 700; }
@@ -510,7 +510,7 @@ button[disabled] { opacity: .48; cursor: not-allowed; }
 .empty-title { display: block; font-size: 13px; font-weight: 600; color: #627b62; }
 .history-note { display: block; text-align: center; color: #98a393; font-size: 10px; margin-top: 15px; }
 .notice { display: flex; flex-direction: column; gap: 5px; padding: 13px 15px; margin-bottom: 18px; font-size: 11px; line-height: 1.65; border-radius: 10px; }
-.notice-error { background: #fcf2ed; border: 1px solid #f5e0d4; color: #a56d53; }
+.notice-error { background: #82aed3; border: 1px solid #2334c8; color: #a56d53; }
 .notice-success { background: #eef7eb; border: 1px solid #dfedda; color: #5b8051; }
 .notice-title { font-weight: 600; }
 .text-button { background: transparent; color: inherit; font-size: 11px; align-self: flex-start; padding-top: 5px; text-decoration: underline; }
